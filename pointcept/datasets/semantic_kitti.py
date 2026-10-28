@@ -164,7 +164,8 @@ class SemanticKITTIColorNormalDataset(SemanticKITTIDataset):
         with open(data_path, "rb") as b:
             scan = np.fromfile(b, dtype=np.float32).reshape(-1, 4)
         coord = scan[:, :3]
-        normal = self.estimate_normals(coord)
+        # the normals Utonia pretrained on: Open3D 30-NN, flipped to face the LiDAR at the origin
+        normal = SemanticKITTIImagePointDataset.get_normals(np.zeros(3), coord).astype(np.float32)
         label_file = data_path.replace("velodyne", "labels").replace(".bin", ".label")
         if os.path.exists(label_file):
             with open(label_file, "rb") as a:
@@ -176,8 +177,8 @@ class SemanticKITTIColorNormalDataset(SemanticKITTIDataset):
             segment = np.zeros(scan.shape[0]).astype(np.int32)
         data_dict = dict(
             coord=coord,
-            color=np.zeros_like(coord),  # placeholder for color
-            normal=np.zeros_like(coord),  # placeholder for normal
+            color=np.zeros_like(coord),  # placeholder for color (no camera images)
+            normal=normal,
             segment=segment,
             name=self.get_data_name(idx),
         )
